@@ -1,53 +1,36 @@
-const [{ Server: h1 }, x] = [require('http'), require('express')];
-const { privateDecrypt: dec } = require('crypto');
-const Busboy = require('busboy');
-
-const Router = x.Router();
-const PORT = 10001;
-/*
+import http from 'http';
+const PORT = process.env.PORT || 3000;
 const CORS = {
-    "Access-Control-Allow-Origin": "*",
-    "Access-Control-Allow-Methods": "GET,PUT,POST,DELETE,OPTIONS",
-    "Access-Control-Allow-Headers":
-    "Content-Type,Accept,Access-Control-Allow-Headers",
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Methods': 'GET,POST,DELETE,OPTIONS',
+  'Access-Control-Allow-Headers': 'Content-Type, Access-Control-Allow-Headers, x-test'
 };
-*/
-const { log } = console;
-const app = x();
-Router
-  .route('/')
-  .get(r => r.res.end('Привет мир!'))
-  .post(async (req, res) => {
-    console.log(req.headers);
-    let o = {key: '', secret: []};
-    const boy = new Busboy({ headers: req.headers });
-    boy.on('file', (fieldname, file) => file
-      .on('data', data => {
-             if (fieldname == 'key') {
-                 o[fieldname] += data;
-             } else {
-                 o[fieldname].push(data);
-             }
-       }));
-    boy.on('finish', () => {
-      o.secret = Buffer.concat(o.secret);
-      let result;
-      try {
-           result = dec(o.key, o.secret);
-      } catch(e) {
-           result = 'ERROR!';
-      }
-      res
-      /* .set(CORS) */
-      .send(String(result));
-    });
-    req.pipe(boy);
 
-  });
-app
-  .use('/', Router)
-  .use(({ res: r }) => r.status(404).send('Пока нет!'))
-  .use((e, r, rs, n) => rs.status(500).send(`Ошибка: ${e}`))
-  .set('x-powered-by', false);
-module.exports = h1(app)
-  .listen(process.env.PORT || PORT, () => log(process.pid));
+const server = http.createServer(async(request,response)=>{
+  if(request.url === '/result4/'){
+    let data = '';
+    
+    response.writeHead(200,{
+      'Content-Type':'application/json',
+      ...CORS,
+    });
+    
+    await request.on('data', function(chunk){
+      data += chunk;
+      }).on('end', () => {
+    });
+    
+    response.write(JSON.stringify({
+      "message":"artem_wr",
+      "x-result":request.headers["x-test"],
+      "x-body":data
+    }));
+  }
+  
+  response.end();
+});
+
+
+server.listen(PORT, () => {
+    console.log(`Server has been started...`);
+});

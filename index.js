@@ -1,38 +1,11 @@
-import http from 'http';
-const PORT = process.env.PORT || 3000;
-const CORS = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Methods': 'GET,POST,DELETE,OPTIONS',
-  'Access-Control-Allow-Headers': 'Content-Type, Access-Control-Allow-Headers, x-test',
-};
+import express from 'express'
+import bodyParser from 'body-parser'
+import {createReadStream} from 'fs'
+import crypto from 'crypto'
+import http from 'http'
 
-const server = http.createServer(async (request, response) => {
-  if (request.url === '/result4/') {
-    let data = '';
+import appSrc from './app.js'
 
-    response.writeHead(200, {
-      'Content-Type': 'application/json',
-      ...CORS,
-    });
+const app = appSrc(express, bodyParser, createReadStream, crypto, http)
 
-    await request
-      .on('data', function (chunk) {
-        data += chunk;
-      })
-      .on('end', () => {});
-
-    response.write(
-      JSON.stringify({
-        message: 'itmo310266',
-        'x-result': request.headers['x-test'],
-        'x-body': data,
-      })
-    );
-  }
-
-  response.end();
-});
-
-server.listen(PORT, () => {
-  console.log(`Server has been started...`);
-});
+app.listen(process.env.PORT)

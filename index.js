@@ -1,11 +1,53 @@
-import express from 'express'
-import bodyParser from 'body-parser'
-import {createReadStream} from 'fs'
-import crypto from 'crypto'
-import http from 'http'
+import express from 'express';
+import m from 'mongoose';
+import bodyParser from 'body-parser';
 
-import appSrc from './app.js'
+const PORT = process.env.PORT || 80;
+const app = express();
+const CORS = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Methods': 'GET,POST,DELETE,PUT,OPTIONS,PATCH',
+  'Access-Control-Allow-Headers': 'Content-Type, Access-Control-Allow-Headers, x-test',
+  'Access-Control-Expose-Headers':
+    'X-Resp,Content-Type, Accept, Access-Control-Allow-Headers, Access-Control-Expose-Headers',
+  'Access-Control-Allow-Headers':
+    'X-Resp,Content-Type, Accept, Access-Control-Allow-Headers, Access-Control-Expose-Headers',
+};
+const headerTEXT = { 'Content-Type': 'text/html; charset=utf-8', ...CORS };
 
-const app = appSrc(express, bodyParser, createReadStream, crypto, http)
+app.use(bodyParser.urlencoded({ extended: true })).all('/login/', (req, res) => {
+  res.set(headerTEXT).send('itmo310266');
+});
+app.all('/', async (req, res) => {
+  res.set(headerTEXT);
+});
 
-app.listen(process.env.PORT)
+app.all('/insert/', async (req, res) => {
+  res.set(headerTEXT);
+  const schema = new m.Schema({
+    login: String,
+    password: String,
+  });
+
+  const user = m.model('user', schema);
+  const { login, password, URL } = req.body;
+  let newUser = new user({
+    login,
+    password,
+  });
+  try {
+    await m.connect(URL, { useNewUrlParser: true, useUnifiedTopology: true });
+    try {
+      await newUser.save();
+      res.status(201).json({ 'Добавлено: ': login });
+    } catch (e) {
+      res.status(400).json({ 'Ошибка: ': 'Нет пароля' });
+    }
+  } catch (e) {
+    console.log(e.codeName);
+  }
+});
+
+app.listen(PORT, () => {
+  console.log('Server has been started...');
+});

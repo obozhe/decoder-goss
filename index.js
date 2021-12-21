@@ -15,6 +15,12 @@ const CORS = {
 };
 const headerTEXT = { 'Content-Type': 'text/html; charset=utf-8', ...CORS };
 
+const schema = new m.Schema({
+  login: String,
+  password: String,
+});
+const user = m.model('user', schema);
+
 app.use(bodyParser.urlencoded({ extended: true })).all('/login/', (req, res) => {
   res.set(headerTEXT).send('itmo310266');
 });
@@ -24,12 +30,7 @@ app.all('/', async (req, res) => {
 
 app.all('/insert/', async (req, res) => {
   res.set(headerTEXT);
-  const schema = new m.Schema({
-    login: String,
-    password: String,
-  });
 
-  const user = m.model('user', schema);
   const { login, password, URL } = req.body;
   let newUser = new user({
     login,
